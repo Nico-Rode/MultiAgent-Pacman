@@ -1,22 +1,21 @@
 # multiAgents.py
 # --------------
-# Licensing Information:  You are free to use or extend these projects for 
-# educational purposes provided that (1) you do not distribute or publish 
-# solutions, (2) you retain this notice, and (3) you provide clear 
-# attribution to UC Berkeley, including a link to 
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley, including a link to
 # http://inst.eecs.berkeley.edu/~cs188/pacman/pacman.html
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
-# The core projects and autograders were primarily created by John DeNero 
+# The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
-# Student side autograding was added by Brad Miller, Nick Hay, and 
+# Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
 from util import manhattanDistance
 from game import Directions
 import random, util
-
 from game import Agent
 
 class ReflexAgent(Agent):
@@ -73,9 +72,29 @@ class ReflexAgent(Agent):
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+
+
+        foodList = newFood.asList();
+        newGhostPosition = successorGameState.getGhostPositions()
+        #the distance from pacman to each ghost
+        foodDist = [manhattanDistance(food, newPos) for food in foodList]
+        ghostDistance = [manhattanDistance(newPos, ghost) for ghost in newGhostPosition]
+        if currentGameState.getPacmanPosition() == newPos:
+            return -1000000
+
+        for gd in ghostDistance:
+           if gd < 2:
+                return -1000000
+
+        if len(foodDist) == 0:
+            return 1000000
+        else:
+            minfoodDist = min(foodDist)
+            maxfoodDist = max(foodDist)
+
+        return 1000/sum(foodDist) + 10000/len(foodDist)
+
 
 def scoreEvaluationFunction(currentGameState):
     """
