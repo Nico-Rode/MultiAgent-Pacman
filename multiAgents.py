@@ -205,7 +205,57 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maxplayer(gameState, depth, alpha, beta):
+            if depth == self.depth:
+                return (self.evaluationFunction(gameState), None)
+
+            actionList = gameState.getLegalActions(0)
+            bestScore = -sys.maxint - 1
+            bestAction = None
+
+            if len(actionList) == 0:
+                return (self.evaluationFunction(gameState), None)
+
+            for action in actionList:
+                if (alpha > beta):
+                    return (bestScore, bestAction)
+                newState = gameState.generateSuccessor(0, action)
+                newScore = minplayer(newState, 1, depth, alpha, beta)[0]
+                if (newScore > bestScore):
+                    bestScore, bestAction = newScore, action
+                if (newScore > alpha):
+                    alpha = newScore
+            return (bestScore, bestAction)
+
+
+
+        def minplayer(gameState, ID, depth, alpha, beta):
+            actionList = gameState.getLegalActions(ID)
+            bestScore = sys.maxint
+            bestAction = None
+
+            if len(actionList) == 0:
+                return (self.evaluationFunction(gameState), None)
+
+            for action in actionList:
+                if (alpha > beta):
+                    return (bestScore, bestAction)
+
+                newState = gameState.generateSuccessor(ID, action)
+                if (ID == gameState.getNumAgents() - 1):
+                    newScore = maxplayer(newState, depth + 1, alpha, beta)[0]
+                else:
+                    newScore = minplayer(newState, ID + 1, depth, alpha, beta)[0]
+
+                if (newScore < bestScore):
+                    bestScore, bestAction = newScore, action
+                if (newScore < beta):
+                    beta = newScore
+            return (bestScore, bestAction)
+
+        return maxplayer(gameState, 0, -sys.maxint - 1, sys.maxint)[1]
+
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
