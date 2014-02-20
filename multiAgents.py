@@ -14,10 +14,12 @@
 
 
 from util import manhattanDistance
-from game import Directions
+from game import Directions, Actions
 import random, util
 from game import Agent
 import sys
+import util
+
 
 class ReflexAgent(Agent):
     """
@@ -270,7 +272,44 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maxplayer(gameState, depth):
+            if depth == self.depth:
+                return (self.evaluationFunction(gameState), None)
+
+            actionList = gameState.getLegalActions(0)
+            bestScore = - sys.maxint - 1
+            bestAction = None
+
+            if len(actionList) == 0:
+                return (self.evaluationFunction(gameState), None)
+
+            for action in actionList:
+                newState = gameState.generateSuccessor(0, action)
+                newScore = randplayer(newState, 1, depth)[0]
+                if (newScore > bestScore):
+                    bestScore, bestAction = newScore, action
+            return (bestScore, bestAction)
+
+
+
+        def randplayer(gameState, ID, depth):
+            actionList = gameState.getLegalActions(ID)
+            totalScore = 0
+            bestAction = None
+
+            if len(actionList) == 0:
+                return (self.evaluationFunction(gameState), None)
+
+            for action in actionList:
+                newState = gameState.generateSuccessor(ID, action)
+                if (ID == gameState.getNumAgents() - 1):
+                    newScore = maxplayer(newState, depth + 1)[0]
+                else:
+                    newScore = randplayer(newState, ID + 1, depth)[0]
+                totalScore += newScore/len(actionList)
+            return (totalScore, bestAction)
+
+        return maxplayer(gameState, 0)[1]
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -280,8 +319,105 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    Pos = currentGameState.getPacmanPosition()
+    Pos = (int(Pos[0]), int(Pos[1]))
+    Food = currentGameState.getFood()
+    GhostStates = currentGameState.getGhostStates()
 
-# Abbreviation
+    ScaredTimes = [ghostState.scaredTimer for ghostState in GhostStates]
+    wallList = currentGameState.getWalls().asList()
+    foodList = Food.asList()
+    GhostPosition = currentGameState.getGhostPositions()
+
+    #the distance from pacman to each ghost
+    foodDist = [manhattanDistance(Pos, food) for food in foodList]
+    foodDist = sorted(foodDist)
+
+    #foodCounter = util.Counter()
+
+    totalEmp = 0
+    for food in foodList:
+        #foodCounter[tuple(food)] = manhattanDistance(Pos, food)
+        totalEmp += EmptyAround(food, Food, wallList)
+
+    # print(totalEmp)
+    #sortedKeys = foodCounter.sortedKeys()
+
+    ghostDistance = [manhattanDistance(Pos, (int(ghost[0]), int(ghost[1]))) for ghost in GhostPosition]
+
+
+    ########## Safety of the Pacman###########
+    safety = 0  
+
+    if sum(ScaredTimes) > 3:
+        for gd in ghostDistance:
+            if gd < 2:
+                safety += 0.5
+            elif gd < 3:
+                safety += 0.2
+            elif gd < 4:
+                safety += 0.08
+            elif gd < 6:
+                safety += 0.04
+            elif gd < 11:
+                safety -= 0.03
+    else:
+        for gd in ghostDistance:
+            if gd < 2:
+                safety -= 0.5
+            elif gd < 3:
+                safety -= 0.2
+            elif gd < 4:
+                safety -= 0.08
+            elif gd < 6:
+                safety -= 0.04
+            elif gd < 11:
+                safety += 0.03
+
+    for time in ScaredTimes:
+        safety += time
+
+    ##########################################
+
+
+
+
+    #########Follow the food #################
+    foodie = currentGameState.getScore()
+    
+    inversefoodDist = 0
+
+
+    if len(foodDist) > 0:
+        inversefoodDist = 1.0/min(foodDist)
+
+    foodie += (min(ghostDistance) * (inversefoodDist**2))
+    foodie -= totalEmp * 6.5
+
+
+
+    ##########################################
+
+
+    return foodie + safety
+
+
+
+
+def square(x):
+    return x * x
+
+def EmptyAround(pos, foodState, wallList):
+
+    x,y = pos
+    num_emp = 0
+    ls = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    counter = 0
+    while counter < 4:   
+        i , j = ls[counter]    
+        if foodState[x + i][y + j] == False and (x + i, y + j) not in wallList:
+            num_emp += 1    
+        counter += 1
+    return num_emp
+
 better = betterEvaluationFunction
-
