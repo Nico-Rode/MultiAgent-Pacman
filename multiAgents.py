@@ -316,7 +316,23 @@ def betterEvaluationFunction(currentGameState):
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
 
-      DESCRIPTION: <write something here so we know what you did>
+      DESCRIPTION: in the evaluation function we are trying to combine the
+      safety of the pacman and the state of the food to assign a heuristic
+      value to the currentGameState. Below are some of the features used:
+
+          1. Empty spaces around each food left. This is aimed at keeping the
+             food in a block, and allow the pacman to clear them efficiently
+
+          2. manhattanDistance to the closest ghost, this is to determine how
+             safe the pacman is. Also allows pacman to eat Ghosts when they are
+             scared.(Different safety level is reflected by the safety parameter
+
+          3. Inverse of the closest manhattanDistance to any food. Want to maximaze
+             this value to minimize distance
+
+      Use a combination of this three main feature to assign value to the gameState
+
+
     """
     "*** YOUR CODE HERE ***"
     Pos = currentGameState.getPacmanPosition()
@@ -333,21 +349,17 @@ def betterEvaluationFunction(currentGameState):
     foodDist = [manhattanDistance(Pos, food) for food in foodList]
     foodDist = sorted(foodDist)
 
-    #foodCounter = util.Counter()
-
+    ########## keep food in the same Block  ###########
     totalEmp = 0
     for food in foodList:
         #foodCounter[tuple(food)] = manhattanDistance(Pos, food)
         totalEmp += EmptyAround(food, Food, wallList)
 
-    # print(totalEmp)
-    #sortedKeys = foodCounter.sortedKeys()
+    ###################################################
 
+    ############Safety of the Pacman############
     ghostDistance = [manhattanDistance(Pos, (int(ghost[0]), int(ghost[1]))) for ghost in GhostPosition]
-
-
-    ########## Safety of the Pacman###########
-    safety = 0  
+    safety = 0
 
     if sum(ScaredTimes) > 3:
         for gd in ghostDistance:
@@ -384,17 +396,13 @@ def betterEvaluationFunction(currentGameState):
 
     #########Follow the food #################
     foodie = currentGameState.getScore()
-    
-    inversefoodDist = 0
 
+    inversefoodDist = 0
 
     if len(foodDist) > 0:
         inversefoodDist = 1.0/min(foodDist)
 
-    foodie += (min(ghostDistance) * (inversefoodDist**2))
-    foodie -= totalEmp * 6.5
-
-
+    foodie += (min(ghostDistance) * (inversefoodDist**2) - totalEmp * 6.5)
 
     ##########################################
 
@@ -413,10 +421,10 @@ def EmptyAround(pos, foodState, wallList):
     num_emp = 0
     ls = [(1, 0), (0, 1), (-1, 0), (0, -1)]
     counter = 0
-    while counter < 4:   
-        i , j = ls[counter]    
+    while counter < 4:
+        i , j = ls[counter]
         if foodState[x + i][y + j] == False and (x + i, y + j) not in wallList:
-            num_emp += 1    
+            num_emp += 1
         counter += 1
     return num_emp
 
